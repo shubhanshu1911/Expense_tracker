@@ -1,0 +1,12 @@
+ ▐▛███▜▌   Claude Code v2.1.175
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/…/My_Learning/claude_code/expense-tracker/expense-tracker
+
+ ▎ Meet Fable 5, our newest model for complex, long-running work. Switch anytime with /model.
+ ▎ Included in your plan limits until Jun 22, then switch to usage credits to continue.
+
+❯ /rename database_setup 
+  ⎿  Session renamed to: database_setup
+
+! git checkout -b feature/database-setup                                        
+  ⎿  Switched to a new branch 'feature/database-setup'
