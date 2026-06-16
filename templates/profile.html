@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<section class="profile-page">
+    <div class="profile-inner">
+
+        {# ---- 1. User info card ---- #}
+        <div class="profile-user-card feature-card">
+            <div class="profile-avatar">{{ user.initials }}</div>
+            <div class="profile-identity">
+                <h1 class="profile-name">{{ user.name }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                <p class="profile-member">
+                    <i data-lucide="calendar"></i>
+                    Member since {{ user.member_since }}
+                </p>
+            </div>
+        </div>
+
+        {# ---- 2. Summary stats row ---- #}
+        <div class="profile-stats">
+            <div class="profile-stat-card feature-card">
+                <span class="profile-stat-icon"><i data-lucide="wallet"></i></span>
+                <div>
+                    <p class="profile-stat-label">Total spent</p>
+                    <p class="profile-stat-value">{{ stats.total_spent }}</p>
+                </div>
+            </div>
+            <div class="profile-stat-card feature-card">
+                <span class="profile-stat-icon"><i data-lucide="receipt"></i></span>
+                <div>
+                    <p class="profile-stat-label">Transactions</p>
+                    <p class="profile-stat-value">{{ stats.transaction_count }}</p>
+                </div>
+            </div>
+            <div class="profile-stat-card feature-card">
+                <span class="profile-stat-icon"><i data-lucide="trophy"></i></span>
+                <div>
+                    <p class="profile-stat-label">Top category</p>
+                    <p class="profile-stat-value">{{ stats.top_category }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+
+            {# ---- 3. Transaction history table ---- #}
+            <div class="profile-history feature-card">
+                <h2 class="profile-section-title">
+                    <i data-lucide="list"></i>
+                    Recent transactions
+                </h2>
+                <div class="profile-table-wrap">
+                    <table class="profile-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th class="profile-amount-col">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td class="profile-tx-date">{{ tx.date }}</td>
+                                <td>{{ tx.description }}</td>
+                                <td><span class="badge badge-{{ tx.category | lower }}">{{ tx.category }}</span></td>
+                                <td class="profile-amount-col profile-tx-amount">{{ tx.amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# ---- 4. Category breakdown ---- #}
+            <div class="profile-breakdown feature-card">
+                <h2 class="profile-section-title">
+                    <i data-lucide="pie-chart"></i>
+                    Category breakdown
+                </h2>
+                {% for cat in category_breakdown %}
+                <div class="profile-cat-row">
+                    <div class="profile-cat-head">
+                        <span class="badge badge-{{ cat.name | lower }}">{{ cat.name }}</span>
+                        <span class="profile-cat-total">{{ cat.total }}</span>
+                    </div>
+                    <div class="profile-cat-track">
+                        <div class="profile-cat-bar badge-bar-{{ cat.name | lower }}"
+                             style="--profile-bar-pct: {{ cat.percent }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
