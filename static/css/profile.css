@@ -1,0 +1,300 @@
+/* static/css/profile.css — Profile page (Step 4). Variables only, no hex. */
+
+/* ---------- Layout ---------- */
+.profile-page {
+    padding: 4rem 2rem 6rem;
+}
+
+.profile-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Lucide icons render as <svg>; keep them inline-sized */
+.profile-page [data-lucide],
+.profile-page svg {
+    width: 1em;
+    height: 1em;
+    stroke-width: 2;
+}
+
+/* ---------- 1. User info card ---------- */
+.profile-user-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+}
+
+.profile-name {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--ink);
+    margin: 0 0 0.25rem;
+}
+
+.profile-email {
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    margin: 0 0 0.35rem;
+}
+
+.profile-member {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* ---------- 2. Summary stats ---------- */
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.profile-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-stat-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 1.25rem;
+}
+
+.profile-stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    margin: 0 0 0.25rem;
+}
+
+.profile-stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+}
+
+/* ---------- Section titles ---------- */
+.profile-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--ink);
+    margin: 0 0 1.25rem;
+}
+
+.profile-section-title [data-lucide],
+.profile-section-title svg {
+    color: var(--accent);
+}
+
+/* ---------- 3. Transaction table ---------- */
+.profile-table-wrap {
+    overflow-x: auto;
+}
+
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-table thead th {
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: var(--ink-muted);
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-table tbody td {
+    padding: 0.8rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.profile-table tbody tr:hover {
+    background: var(--paper-warm);
+}
+
+.profile-amount-col {
+    text-align: right;
+}
+
+.profile-tx-date {
+    color: var(--ink-muted);
+    white-space: nowrap;
+}
+
+.profile-tx-amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+/* ---------- 4. Category breakdown ---------- */
+.profile-cat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 1.1rem;
+}
+
+.profile-cat-row:last-child {
+    margin-bottom: 0;
+}
+
+.profile-cat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profile-cat-total {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-cat-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--border-soft);
+    overflow: hidden;
+}
+
+.profile-cat-bar {
+    height: 100%;
+    width: var(--profile-bar-pct, 0%);
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+/* ---------- Category badges (pills) ---------- */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.badge-food,
+.badge-health {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.badge-transport,
+.badge-entertainment {
+    background: var(--accent-2-light);
+    color: var(--accent-2);
+}
+
+.badge-bills {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: var(--danger-border);
+}
+
+.badge-shopping,
+.badge-other {
+    background: var(--paper-warm);
+    color: var(--ink-muted);
+    border-color: var(--border);
+}
+
+/* ---------- Breakdown bar colors (match badges) ---------- */
+.badge-bar-food,
+.badge-bar-health {
+    background: var(--accent);
+}
+
+.badge-bar-transport,
+.badge-bar-entertainment {
+    background: var(--accent-2);
+}
+
+.badge-bar-bills {
+    background: var(--danger);
+}
+
+.badge-bar-shopping,
+.badge-bar-other {
+    background: var(--ink-faint);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-page {
+        padding: 2.5rem 1.25rem 4rem;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-user-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
