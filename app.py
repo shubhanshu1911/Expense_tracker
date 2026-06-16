@@ -4,6 +4,13 @@ from flask import Flask, render_template, request, redirect, url_for, abort, ses
 from werkzeug.security import check_password_hash
 
 from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.queries import (
+    get_user_by_id,
+    get_summary_stats,
+    get_recent_transactions,
+    get_category_breakdown,
+    format_currency,
+)
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
@@ -94,32 +101,48 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    # Step 4 is UI-only — all data below is hardcoded. Step 5 wires real queries.
+    user_id = session["user_id"]
+
+    # --- [SUBAGENT 2: summary stats + account] ---
+    db_user = get_user_by_id(user_id)
     user = {
-        "name": "Aarav Sharma",
-        "email": "aarav.sharma@example.com",
-        "initials": "AS",
-        "member_since": "March 2024",
+        "name": db_user["name"],
+        "email": db_user["email"],
+        "initials": "".join(p[0].upper() for p in db_user["name"].split()[:2]),
+        "member_since": db_user["member_since"],
     }
+    raw_stats = get_summary_stats(user_id)
     stats = {
-        "total_spent": "₹42,180",
-        "transaction_count": 27,
-        "top_category": "Food",
+        "total_spent": format_currency(raw_stats["total_spent"]),
+        "transaction_count": raw_stats["transaction_count"],
+        "top_category": raw_stats["top_category"],
     }
+    # --- [END SUBAGENT 2] ---
+
+    # --- [SUBAGENT 1: transaction history] ---
+    raw_transactions = get_recent_transactions(user_id)
     transactions = [
-        {"date": "12 Jun 2026", "description": "Grocery run — DMart",  "category": "Food",          "amount": "₹2,340"},
-        {"date": "10 Jun 2026", "description": "Metro card recharge",  "category": "Transport",     "amount": "₹500"},
-        {"date": "08 Jun 2026", "description": "Electricity bill",     "category": "Bills",         "amount": "₹1,820"},
-        {"date": "05 Jun 2026", "description": "Pharmacy — Apollo",    "category": "Health",        "amount": "₹640"},
-        {"date": "02 Jun 2026", "description": "Movie night — PVR",    "category": "Entertainment", "amount": "₹900"},
+        {
+            "date": tx["date"],
+            "description": tx["description"],
+            "category": tx["category"],
+            "amount": format_currency(tx["amount"]),
+        }
+        for tx in raw_transactions
     ]
+    # --- [END SUBAGENT 1] ---
+
+    # --- [SUBAGENT 3: category breakdown] ---
+    raw_breakdown = get_category_breakdown(user_id)
     category_breakdown = [
-        {"name": "Food",          "total": "₹14,200", "percent": 34},
-        {"name": "Bills",         "total": "₹9,600",  "percent": 23},
-        {"name": "Transport",     "total": "₹6,400",  "percent": 15},
-        {"name": "Health",        "total": "₹5,180",  "percent": 12},
-        {"name": "Entertainment", "total": "₹4,800",  "percent": 11},
+        {
+            "name": cat["name"],
+            "total": format_currency(cat["amount"]),
+            "percent": cat["pct"],
+        }
+        for cat in raw_breakdown
     ]
+    # --- [END SUBAGENT 3] ---
 
     return render_template(
         "profile.html",
