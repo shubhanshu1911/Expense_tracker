@@ -25,19 +25,32 @@ def get_user_by_id(user_id):
     return {"name": row["name"], "email": row["email"], "member_since": created.strftime("%B %Y")}
 
 
-def get_summary_stats(user_id):
+def get_summary_stats(user_id, date_from=None, date_to=None):
     db = get_db()
-    total_row = db.execute(
-        "SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt FROM expenses WHERE user_id = ?",
-        (user_id,),
-    ).fetchone()
-    top_row = db.execute(
-        """
-        SELECT category, SUM(amount) AS cat_total FROM expenses
-        WHERE user_id = ? GROUP BY category ORDER BY cat_total DESC LIMIT 1
-        """,
-        (user_id,),
-    ).fetchone()
+    use_dates = date_from and date_to
+    if use_dates:
+        total_sql = (
+            "SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt "
+            "FROM expenses WHERE user_id = ? AND date BETWEEN ? AND ?"
+        )
+        top_sql = (
+            "SELECT category, SUM(amount) AS cat_total FROM expenses "
+            "WHERE user_id = ? AND date BETWEEN ? AND ? "
+            "GROUP BY category ORDER BY cat_total DESC LIMIT 1"
+        )
+        params = (user_id, date_from, date_to)
+    else:
+        total_sql = (
+            "SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt "
+            "FROM expenses WHERE user_id = ?"
+        )
+        top_sql = (
+            "SELECT category, SUM(amount) AS cat_total FROM expenses "
+            "WHERE user_id = ? GROUP BY category ORDER BY cat_total DESC LIMIT 1"
+        )
+        params = (user_id,)
+    total_row = db.execute(total_sql, params).fetchone()
+    top_row = db.execute(top_sql, params).fetchone()
     db.close()
     return {
         "total_spent": total_row["total"],
@@ -49,18 +62,22 @@ def get_summary_stats(user_id):
 # --- Subagent 1 (transaction history) adds get_recent_transactions() below ---
 
 
-def get_recent_transactions(user_id, limit=10):
+def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
     db = get_db()
-    rows = db.execute(
-        """
-        SELECT date, description, category, amount
-        FROM expenses
-        WHERE user_id = ?
-        ORDER BY date DESC, id DESC
-        LIMIT ?
-        """,
-        (user_id, limit),
-    ).fetchall()
+    if date_from and date_to:
+        sql = (
+            "SELECT date, description, category, amount FROM expenses "
+            "WHERE user_id = ? AND date BETWEEN ? AND ? "
+            "ORDER BY date DESC, id DESC LIMIT ?"
+        )
+        params = (user_id, date_from, date_to, limit)
+    else:
+        sql = (
+            "SELECT date, description, category, amount FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?"
+        )
+        params = (user_id, limit)
+    rows = db.execute(sql, params).fetchall()
     db.close()
     return [
         {"date": r["date"], "description": r["description"],
@@ -72,15 +89,22 @@ def get_recent_transactions(user_id, limit=10):
 # --- Subagent 3 (category breakdown) adds get_category_breakdown() below ---
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, date_from=None, date_to=None):
     db = get_db()
-    rows = db.execute(
-        """
-        SELECT category, SUM(amount) AS cat_total FROM expenses
-        WHERE user_id = ? GROUP BY category ORDER BY cat_total DESC
-        """,
-        (user_id,),
-    ).fetchall()
+    if date_from and date_to:
+        sql = (
+            "SELECT category, SUM(amount) AS cat_total FROM expenses "
+            "WHERE user_id = ? AND date BETWEEN ? AND ? "
+            "GROUP BY category ORDER BY cat_total DESC"
+        )
+        params = (user_id, date_from, date_to)
+    else:
+        sql = (
+            "SELECT category, SUM(amount) AS cat_total FROM expenses "
+            "WHERE user_id = ? GROUP BY category ORDER BY cat_total DESC"
+        )
+        params = (user_id,)
+    rows = db.execute(sql, params).fetchall()
     db.close()
     if not rows:
         return []
