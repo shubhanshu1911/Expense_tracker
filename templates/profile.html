@@ -24,6 +24,31 @@
             </div>
         </div>
 
+        {# ---- Filter bar ---- #}
+        <div class="filter-bar">
+            <div class="filter-presets">
+                <a href="{{ url_for('profile', date_from=presets.this_month[0], date_to=presets.this_month[1]) }}"
+                   class="filter-btn{% if active_preset == 'this_month' %} active{% endif %}">This Month</a>
+                <a href="{{ url_for('profile', date_from=presets.last_3_months[0], date_to=presets.last_3_months[1]) }}"
+                   class="filter-btn{% if active_preset == 'last_3_months' %} active{% endif %}">Last 3 Months</a>
+                <a href="{{ url_for('profile', date_from=presets.last_6_months[0], date_to=presets.last_6_months[1]) }}"
+                   class="filter-btn{% if active_preset == 'last_6_months' %} active{% endif %}">Last 6 Months</a>
+                <a href="{{ url_for('profile') }}"
+                   class="filter-btn{% if not date_from_str and not date_to_str %} active{% endif %}">All Time</a>
+            </div>
+            <form class="filter-custom" method="get" action="{{ url_for('profile') }}">
+                <input type="date" name="date_from" value="{{ date_from_str or '' }}">
+                <span>to</span>
+                <input type="date" name="date_to" value="{{ date_to_str or '' }}">
+                <button type="submit" class="filter-apply">Apply</button>
+            </form>
+        </div>
+        {% with messages = get_flashed_messages() %}
+            {% for msg in messages %}
+                <p class="filter-error">{{ msg }}</p>
+            {% endfor %}
+        {% endwith %}
+
         {# ---- 2. Summary stats row ---- #}
         <div class="profile-stats">
             <div class="profile-stat-card feature-card">

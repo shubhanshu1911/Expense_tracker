@@ -277,6 +277,92 @@
     background: var(--ink-faint);
 }
 
+/* ---------- Date filter bar ---------- */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.filter-presets {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--paper);
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.filter-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper-card);
+}
+
+.filter-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.filter-custom span {
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+}
+
+.filter-custom input[type="date"] {
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.filter-apply {
+    padding: 0.35rem 0.85rem;
+    background: var(--accent);
+    color: var(--paper-card);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.filter-apply:hover {
+    opacity: 0.9;
+}
+
+.filter-error {
+    color: var(--danger);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .profile-grid {

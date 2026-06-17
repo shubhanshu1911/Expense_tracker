@@ -1,6 +1,7 @@
 import sqlite3
+from datetime import date, datetime, timedelta
 
-from flask import Flask, render_template, request, redirect, url_for, abort, session
+from flask import Flask, flash, render_template, request, redirect, url_for, abort, session
 from werkzeug.security import check_password_hash
 
 from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
@@ -14,6 +15,34 @@ from database.queries import (
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
+
+
+# ------------------------------------------------------------------ #
+# Helpers                                                             #
+# ------------------------------------------------------------------ #
+
+def _parse_date(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_presets(today):
+    return {
+        "this_month":    (today.replace(day=1).isoformat(), today.isoformat()),
+        "last_3_months": ((today - timedelta(days=90)).isoformat(), today.isoformat()),
+        "last_6_months": ((today - timedelta(days=180)).isoformat(), today.isoformat()),
+    }
+
+
+def _detect_active_preset(presets, date_from_str, date_to_str):
+    if not (date_from_str and date_to_str):
+        return None
+    for name, (f, t) in presets.items():
+        if date_from_str == f and date_to_str == t:
+            return name
+    return None
 
 
 # ------------------------------------------------------------------ #
@@ -103,6 +132,17 @@ def profile():
 
     user_id = session["user_id"]
 
+    # --- Date filter ---
+    date_from = _parse_date(request.args.get("date_from", ""))
+    date_to = _parse_date(request.args.get("date_to", ""))
+    if date_from and date_to and date_from > date_to:
+        flash("Start date must be before end date.")
+        date_from = date_to = None
+    date_from_str = date_from.isoformat() if date_from else None
+    date_to_str = date_to.isoformat() if date_to else None
+    presets = _build_presets(date.today())
+    active_preset = _detect_active_preset(presets, date_from_str, date_to_str)
+
     # --- [SUBAGENT 2: summary stats + account] ---
     db_user = get_user_by_id(user_id)
     user = {
@@ -111,7 +151,7 @@ def profile():
         "initials": "".join(p[0].upper() for p in db_user["name"].split()[:2]),
         "member_since": db_user["member_since"],
     }
-    raw_stats = get_summary_stats(user_id)
+    raw_stats = get_summary_stats(user_id, date_from=date_from_str, date_to=date_to_str)
     stats = {
         "total_spent": format_currency(raw_stats["total_spent"]),
         "transaction_count": raw_stats["transaction_count"],
@@ -120,7 +160,7 @@ def profile():
     # --- [END SUBAGENT 2] ---
 
     # --- [SUBAGENT 1: transaction history] ---
-    raw_transactions = get_recent_transactions(user_id)
+    raw_transactions = get_recent_transactions(user_id, date_from=date_from_str, date_to=date_to_str)
     transactions = [
         {
             "date": tx["date"],
@@ -133,7 +173,7 @@ def profile():
     # --- [END SUBAGENT 1] ---
 
     # --- [SUBAGENT 3: category breakdown] ---
-    raw_breakdown = get_category_breakdown(user_id)
+    raw_breakdown = get_category_breakdown(user_id, date_from=date_from_str, date_to=date_to_str)
     category_breakdown = [
         {
             "name": cat["name"],
@@ -150,6 +190,10 @@ def profile():
         stats=stats,
         transactions=transactions,
         category_breakdown=category_breakdown,
+        date_from_str=date_from_str,
+        date_to_str=date_to_str,
+        presets=presets,
+        active_preset=active_preset,
     )
 
 
