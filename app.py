@@ -1,10 +1,18 @@
+import os
 import sqlite3
 from datetime import date, datetime, timedelta
 
 from flask import Flask, flash, render_template, request, redirect, url_for, abort, session
 from werkzeug.security import check_password_hash
 
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.db import (
+    get_db,
+    init_db,
+    seed_db,
+    create_user,
+    get_user_by_email,
+    insert_expense,
+)
 from database.queries import (
     get_user_by_id,
     get_summary_stats,
@@ -15,6 +23,14 @@ from database.queries import (
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"
+
+EXPENSE_CATEGORIES = [
+    "Food", "Transport", "Bills", "Health",
+    "Entertainment", "Shopping", "Other",
+]
+
+MAX_EXPENSE_AMOUNT = 1_000_000
+MAX_DESCRIPTION_LENGTH = 300
 
 
 # ------------------------------------------------------------------ #
@@ -197,9 +213,69 @@ def profile():
     )
 
 
-@app.route("/expenses/add")
+def _render_add_expense_form(form, error=None):
+    return render_template(
+        "add_expense.html",
+        categories=EXPENSE_CATEGORIES,
+        today=date.today().isoformat(),
+        form=form,
+        error=error,
+    )
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return _render_add_expense_form(form={})
+
+    amount_raw = request.form.get("amount", "").strip()
+    category = request.form.get("category", "")
+    date_raw = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip()
+
+    form = {
+        "amount": amount_raw,
+        "category": category,
+        "date": date_raw,
+        "description": description,
+    }
+
+    try:
+        amount = float(amount_raw)
+    except ValueError:
+        return _render_add_expense_form(form, "Amount must be a valid number.")
+    if amount <= 0:
+        return _render_add_expense_form(form, "Amount must be greater than zero.")
+    if amount > MAX_EXPENSE_AMOUNT:
+        return _render_add_expense_form(
+            form, f"Amount must not exceed {MAX_EXPENSE_AMOUNT:,}."
+        )
+
+    if category not in EXPENSE_CATEGORIES:
+        return _render_add_expense_form(form, "Please select a valid category.")
+
+    parsed = _parse_date(date_raw)
+    if parsed is None:
+        return _render_add_expense_form(
+            form, "Please enter a valid date (YYYY-MM-DD)."
+        )
+
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        return _render_add_expense_form(
+            form,
+            f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer.",
+        )
+
+    desc_value = description or None
+
+    insert_expense(
+        session["user_id"], amount, category, parsed.isoformat(), desc_value
+    )
+    flash("Expense added successfully.", "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")
@@ -216,4 +292,4 @@ if __name__ == "__main__":
     with app.app_context():
         init_db()
         seed_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1", port=5001)

@@ -357,10 +357,9 @@
     opacity: 0.9;
 }
 
-.filter-error {
-    color: var(--danger);
-    font-size: 0.875rem;
-    margin: 0;
+.profile-actions {
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* ---------- Responsive ---------- */

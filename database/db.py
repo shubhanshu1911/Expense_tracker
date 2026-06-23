@@ -51,6 +51,19 @@ def create_user(name, email, password):
     return user_id
 
 
+def insert_expense(user_id, amount, category, expense_date, description):
+    db = get_db()
+    db.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (user_id, amount, category, expense_date, description),
+    )
+    db.commit()
+    expense_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    db.close()
+    return expense_id
+
+
 def get_user_by_email(email):
     db = get_db()
     user = db.execute(
