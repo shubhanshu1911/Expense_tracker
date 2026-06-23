@@ -24,6 +24,14 @@
             </div>
         </div>
 
+        {# ---- Add expense action ---- #}
+        <div class="profile-actions">
+            <a href="{{ url_for('add_expense') }}" class="btn-primary">
+                <i data-lucide="plus"></i>
+                Add Expense
+            </a>
+        </div>
+
         {# ---- Filter bar ---- #}
         <div class="filter-bar">
             <div class="filter-presets">
@@ -43,11 +51,6 @@
                 <button type="submit" class="filter-apply">Apply</button>
             </form>
         </div>
-        {% with messages = get_flashed_messages() %}
-            {% for msg in messages %}
-                <p class="filter-error">{{ msg }}</p>
-            {% endfor %}
-        {% endwith %}
 
         {# ---- 2. Summary stats row ---- #}
         <div class="profile-stats">
