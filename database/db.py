@@ -64,6 +64,19 @@ def insert_expense(user_id, amount, category, expense_date, description):
     return expense_id
 
 
+def update_expense(expense_id, user_id, amount, category, expense_date, description):
+    db = get_db()
+    cursor = db.execute(
+        "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? "
+        "WHERE id = ? AND user_id = ?",
+        (amount, category, expense_date, description, expense_id, user_id),
+    )
+    db.commit()
+    updated = cursor.rowcount
+    db.close()
+    return updated
+
+
 def get_user_by_email(email):
     db = get_db()
     user = db.execute(

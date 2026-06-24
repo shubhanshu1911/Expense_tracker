@@ -182,6 +182,21 @@
     white-space: nowrap;
 }
 
+.profile-actions-col {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.profile-tx-edit {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.profile-tx-edit:hover {
+    text-decoration: underline;
+}
+
 /* ---------- 4. Category breakdown ---------- */
 .profile-cat-row {
     display: flex;
