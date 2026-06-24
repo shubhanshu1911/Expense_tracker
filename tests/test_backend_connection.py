@@ -48,7 +48,7 @@ def test_get_recent_transactions_with_expenses(client):
     dates = [tx["date"] for tx in txs]
     assert dates == sorted(dates, reverse=True)
     for tx in txs:
-        assert set(tx.keys()) == {"date", "description", "category", "amount"}
+        assert set(tx.keys()) == {"id", "date", "description", "category", "amount"}
 
 
 def test_get_recent_transactions_no_expenses(client):

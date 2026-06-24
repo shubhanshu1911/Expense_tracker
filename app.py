@@ -12,12 +12,14 @@ from database.db import (
     create_user,
     get_user_by_email,
     insert_expense,
+    update_expense,
 )
 from database.queries import (
     get_user_by_id,
     get_summary_stats,
     get_recent_transactions,
     get_category_breakdown,
+    get_expense_by_id,
     format_currency,
 )
 
@@ -179,6 +181,7 @@ def profile():
     raw_transactions = get_recent_transactions(user_id, date_from=date_from_str, date_to=date_to_str)
     transactions = [
         {
+            "id": tx["id"],
             "date": tx["date"],
             "description": tx["description"],
             "category": tx["category"],
@@ -223,6 +226,46 @@ def _render_add_expense_form(form, error=None):
     )
 
 
+def _read_expense_form():
+    return {
+        "amount": request.form.get("amount", "").strip(),
+        "category": request.form.get("category", ""),
+        "date": request.form.get("date", "").strip(),
+        "description": request.form.get("description", "").strip(),
+    }
+
+
+def _validate_expense_form(form):
+    """Validate a submitted expense form. Returns (values, error). On success
+    `values` is a dict of cleaned fields ready for the DB; on failure `error`
+    is a message string and `values` is None."""
+    try:
+        amount = float(form["amount"])
+    except ValueError:
+        return None, "Amount must be a valid number."
+    if amount <= 0:
+        return None, "Amount must be greater than zero."
+    if amount > MAX_EXPENSE_AMOUNT:
+        return None, f"Amount must not exceed {MAX_EXPENSE_AMOUNT:,}."
+
+    if form["category"] not in EXPENSE_CATEGORIES:
+        return None, "Please select a valid category."
+
+    parsed = _parse_date(form["date"])
+    if parsed is None:
+        return None, "Please enter a valid date (YYYY-MM-DD)."
+
+    if len(form["description"]) > MAX_DESCRIPTION_LENGTH:
+        return None, f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer."
+
+    return {
+        "amount": amount,
+        "category": form["category"],
+        "date": parsed.isoformat(),
+        "description": form["description"] or None,
+    }, None
+
+
 @app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
     if not session.get("user_id"):
@@ -231,56 +274,62 @@ def add_expense():
     if request.method == "GET":
         return _render_add_expense_form(form={})
 
-    amount_raw = request.form.get("amount", "").strip()
-    category = request.form.get("category", "")
-    date_raw = request.form.get("date", "").strip()
-    description = request.form.get("description", "").strip()
-
-    form = {
-        "amount": amount_raw,
-        "category": category,
-        "date": date_raw,
-        "description": description,
-    }
-
-    try:
-        amount = float(amount_raw)
-    except ValueError:
-        return _render_add_expense_form(form, "Amount must be a valid number.")
-    if amount <= 0:
-        return _render_add_expense_form(form, "Amount must be greater than zero.")
-    if amount > MAX_EXPENSE_AMOUNT:
-        return _render_add_expense_form(
-            form, f"Amount must not exceed {MAX_EXPENSE_AMOUNT:,}."
-        )
-
-    if category not in EXPENSE_CATEGORIES:
-        return _render_add_expense_form(form, "Please select a valid category.")
-
-    parsed = _parse_date(date_raw)
-    if parsed is None:
-        return _render_add_expense_form(
-            form, "Please enter a valid date (YYYY-MM-DD)."
-        )
-
-    if len(description) > MAX_DESCRIPTION_LENGTH:
-        return _render_add_expense_form(
-            form,
-            f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer.",
-        )
-
-    desc_value = description or None
+    form = _read_expense_form()
+    values, error = _validate_expense_form(form)
+    if error:
+        return _render_add_expense_form(form, error)
 
     insert_expense(
-        session["user_id"], amount, category, parsed.isoformat(), desc_value
+        session["user_id"], values["amount"], values["category"],
+        values["date"], values["description"],
     )
     flash("Expense added successfully.", "success")
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/edit")
-def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+def _render_edit_expense_form(expense_id, form, error=None):
+    return render_template(
+        "edit_expense.html",
+        categories=EXPENSE_CATEGORIES,
+        expense_id=expense_id,
+        form=form,
+        error=error,
+    )
+
+
+@app.route("/expenses/<int:expense_id>/edit", methods=["GET", "POST"])
+def edit_expense(expense_id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(expense_id, session["user_id"])
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        return _render_edit_expense_form(
+            expense_id,
+            {
+                "amount": expense["amount"],
+                "category": expense["category"],
+                "date": expense["date"],
+                "description": expense["description"] or "",
+            },
+        )
+
+    form = _read_expense_form()
+    values, error = _validate_expense_form(form)
+    if error:
+        return _render_edit_expense_form(expense_id, form, error)
+
+    updated = update_expense(
+        expense_id, session["user_id"], values["amount"], values["category"],
+        values["date"], values["description"],
+    )
+    if not updated:
+        abort(404)
+    flash("Expense updated successfully.", "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/delete")

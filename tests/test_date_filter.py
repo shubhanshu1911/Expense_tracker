@@ -145,7 +145,7 @@ class TestGetRecentTransactionsDateFilter:
             DEMO_USER_ID, date_from="2026-06-01", date_to="2026-06-05"
         )
         for tx in txs:
-            assert set(tx.keys()) == {"date", "description", "category", "amount"}, (
+            assert set(tx.keys()) == {"id", "date", "description", "category", "amount"}, (
                 f"Unexpected keys in filtered transaction row: {set(tx.keys())}"
             )
 
