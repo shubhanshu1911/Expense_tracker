@@ -13,6 +13,7 @@ from database.db import (
     get_user_by_email,
     insert_expense,
     update_expense,
+    delete_expense,
 )
 from database.queries import (
     get_user_by_id,
@@ -332,9 +333,24 @@ def edit_expense(expense_id):
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/delete")
-def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+@app.route("/expenses/<int:id>/delete", methods=["GET", "POST"])
+def delete_expense_route(id):
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id, session["user_id"])
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        display_expense = dict(expense, amount=format_currency(expense["amount"]))
+        return render_template("delete_expense.html", expense=display_expense)
+
+    deleted = delete_expense(id, session["user_id"])
+    if not deleted:
+        abort(404)
+    flash("Expense deleted successfully.", "success")
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

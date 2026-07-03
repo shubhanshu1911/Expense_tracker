@@ -197,6 +197,17 @@
     text-decoration: underline;
 }
 
+.profile-tx-delete {
+    color: var(--danger);
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 0.75rem;
+}
+
+.profile-tx-delete:hover {
+    text-decoration: underline;
+}
+
 /* ---------- 4. Category breakdown ---------- */
 .profile-cat-row {
     display: flex;
