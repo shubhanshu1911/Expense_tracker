@@ -77,6 +77,18 @@ def update_expense(expense_id, user_id, amount, category, expense_date, descript
     return updated
 
 
+def delete_expense(expense_id, user_id):
+    db = get_db()
+    cursor = db.execute(
+        "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+        (expense_id, user_id),
+    )
+    db.commit()
+    deleted = cursor.rowcount
+    db.close()
+    return deleted
+
+
 def get_user_by_email(email):
     db = get_db()
     user = db.execute(
